@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="#000000"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
+
+        <!-- Apple iOS Grouped Inset Card -->
+        <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:background="@drawable/white_card_bg"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="28dp"
+            android:orientation="vertical"
+            android:id="@+id/loginCard"
+            android:gravity="center">
+
+            <!-- Apple Squircle F Icon -->
+            <ImageView
+                android:layout_height="84dp"
+                android:layout_width="84dp"
+                android:src="@drawable/ic_launcher"
+                android:background="@drawable/logo_glow_ring"
+                android:padding="2dp"
+                android:id="@+id/logo"
+                android:scaleType="fitCenter"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Title -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:textSize="22sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:id="@+id/title"
+                android:text="Featurestic Lite Loader" />
+
+            <!-- Apple Secondary Subtitle -->
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_marginBottom="26dp"
+                android:textSize="13sp"
+                android:fontFamily="sans-serif"
+                android:textColor="#8E8E93"
+                android:text="Sign in with your license key" />
+
+            <!-- Apple iOS Tertiary Input Field -->
+            <LinearLayout
+                android:layout_height="50dp"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="16dp"
+                android:paddingEnd="12dp"
+                android:paddingStart="16dp"
+                android:gravity="center_vertical"
+                android:background="@drawable/input_field_bg"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:layout_height="match_parent"
+                    android:layout_width="0dp"
+                    android:textSize="15sp"
+                    android:textColor="#FFFFFF"
+                    android:background="@android:color/transparent"
+                    android:hint="License Key"
+                    android:textColorHint="#8E8E93"
+                    android:fontFamily="sans-serif"
+                    android:layout_weight="1"
+                    android:inputType="textVisiblePassword"
+                    android:id="@+id/userkey"
+                    android:singleLine="true" />
+
+                <ImageView
+                    android:layout_height="22dp"
+                    android:layout_width="22dp"
+                    android:src="@drawable/baseline_content_paste_24"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:tint="#0A84FF"
+                    android:padding="2dp"
+                    android:id="@+id/paste" />
+
+            </LinearLayout>
+
+            <!-- Apple iOS Prominent System Blue Button -->
+            <TextView
+                android:layout_height="50dp"
+                android:layout_width="match_parent"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
+                android:background="@drawable/gradient_login_btn"
+                android:textColor="#FFFFFF"
+                android:id="@+id/login"
+                android:text="Continue"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:stateListAnimator="@null" />
+
+            <!-- Hidden Legacy Views -->
+            <Switch
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:id="@+id/hiderecording" />
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:id="@+id/GetKey"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorAccent">#00F0FF</color>
+    <color name="primary">#7C3AED</color>
+    <color name="error">#FF453A</color>
+    <color name="black">#060714</color>
+    <color name="secondary">#161B36</color>
+    <color name="primaryText">#FFFFFF</color>
+    <color name="hintText">#94A3B8</color>
+    <color name="buttonPrimary">#2563EB</color>
+    <color name="white">#FFFFFF</color>
+    <color name="background">#060714</color>
+    <color name="secodary2">#11152C</color>
+    <color name="button">#00F0FF</color>
+    <color name="background2">#0F1226</color>
+    <color name="crbgdm">#00F0FF</color>
+    <color name="darker_gray">#94A3B8</color>
+
+    <color name="theme">#0B0E21</color>
+    <color name="theme1">#121631</color>
+    <color name="theme2">#161B3A</color>
+    <color name="theme3">#1E254D</color>
+
+    <color name="buttonon">#2563EB</color>
+    <color name="buttonof">#161B36</color>
+
+    <color name="whitegelap">#A5B4FC</color>
+    <color name="green">#00F0FF</color>
+    <color name="livaiamk">#FFFFFF</color>
+    <color name="back">#060714</color>
+    <color name="red">#FF453A</color>
+</resources>
