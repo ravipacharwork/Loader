@@ -73,6 +73,7 @@ public class BoxApplication extends Application {
             final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
             Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
                 try {
+                    LoaderLog.crash(throwable);
                     boolean isMain = android.os.Looper.getMainLooper() != null
                             && android.os.Looper.getMainLooper().getThread() == thread;
                     String stack = Log.getStackTraceString(throwable);
@@ -147,6 +148,9 @@ public class BoxApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        LoaderLog.init(this);
+        LoaderLog.i("App", "BoxApplication.onCreate pid=" + android.os.Process.myPid()
+                + " process=" + LoaderLog.ctx());
         FeaturesticBoxCore.get().doCreate();
         FeaturesticBoxCore.setHideXposed(true);
 
@@ -156,8 +160,10 @@ public class BoxApplication extends Application {
             try {
                 if (isValidSignature()) {
                     Log.d(TAG, "Valid signature verified, activating box...");
+                    LoaderLog.i("App", "signature OK, box activated");
                 } else {
                     Log.w(TAG, "Signature verification failed!");
+                    LoaderLog.w("App", "signature verification FAILED");
                 }
             } catch (Throwable t) {
                 Log.w(TAG, "Signature check skipped", t);
@@ -167,6 +173,8 @@ public class BoxApplication extends Application {
         FeaturesticBoxCore.get().addAppLifecycleCallback(new AppLifecycleCallback() {
             @Override
             public void beforeCreateApplication(String packageName, String processName, Context context, int userId) {
+                LoaderLog.i("VirtualApp", "beforeCreateApplication pkg=" + packageName
+                        + " process=" + processName + " userId=" + userId);
             }
 
             @Override
@@ -176,6 +184,8 @@ public class BoxApplication extends Application {
 
             @Override
             public void afterApplicationOnCreate(String packageName, String processName, Application application, int userId) {
+                LoaderLog.i("VirtualApp", "afterApplicationOnCreate pkg=" + packageName
+                        + " process=" + processName + " app=" + (application != null ? application.getClass().getName() : "null"));
                 installAutomaticCrashLogger();
                 if (isTargetGamePackage(packageName)
                         && (processName == null || processName.isEmpty() || packageName.equals(processName))) {

@@ -114,6 +114,8 @@ public static boolean Kooontoool = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LoaderLog.init(this);
+        LoaderLog.i("Login", "LogAct.onCreate");
 
         // VPN check before showing UI
         if (iskokofm()) {

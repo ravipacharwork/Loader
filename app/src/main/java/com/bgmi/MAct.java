@@ -195,13 +195,17 @@ public class MAct extends AppCompatActivity {
 
         instance = this;
         prefs = new Prefs(this);
+        LoaderLog.init(this);
+        LoaderLog.i("MAct", "onCreate activity started");
 
         if (!ischicken()) {
+            LoaderLog.e("MAct", "signature integrity check FAILED");
             Toast.makeText(this, "Security or signature integrity check failed!", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
         if (!verifyAuthenticatedSessionAndPanelGate() || !isExpiryDateValid()) {
+            LoaderLog.w("MAct", "session gate failed (auth=" + verifyAuthenticatedSessionAndPanelGate() + ")");
             showToast("Session unauthorized or expired! Please login again.");
             startActivity(new Intent(this, LogAct.class));
             finish();
@@ -240,6 +244,11 @@ public class MAct extends AppCompatActivity {
         String deviceInfo = Build.MANUFACTURER + " " + Build.MODEL + " • Android " + Build.VERSION.RELEASE;
         if (tvDeviceInfo != null) {
             tvDeviceInfo.setText(deviceInfo);
+            tvDeviceInfo.setLongClickable(true);
+            tvDeviceInfo.setOnLongClickListener(v -> {
+                showLogsDialog();
+                return true;
+            });
         }
         if (tvLoaderInfo != null) {
             tvLoaderInfo.setText("Target Game & Multi-.SO Ready");
@@ -309,6 +318,7 @@ public class MAct extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        LoaderLog.i("MAct", "onResume");
         resolveActiveTargetGameAndSlot();
         refreshGgModuleStatus();
         refreshSoModuleStatus();
@@ -646,6 +656,7 @@ public class MAct extends AppCompatActivity {
             showToast("Selected APK file is not accessible");
             return;
         }
+        LoaderLog.i("GG", "install requested: " + apkFile.getAbsolutePath() + " autoLaunch=" + autoLaunch);
         progressCard.setVisibility(View.VISIBLE);
         progressBar.setIndeterminate(true);
         progressText.setText("Installing " + apkFile.getName() + "...");
@@ -669,8 +680,12 @@ public class MAct extends AppCompatActivity {
                 }
 
                 InstallResult res = FeaturesticBoxCore.get().installPackageAsUser(apkFile, USER_ID);
+                LoaderLog.i("GG", "installPackageAsUser -> " + (res == null ? "null"
+                        : ("success=" + res.success + " pkg=" + res.packageName + " msg=" + res.msg)));
                 if (res == null || !res.success || res.packageName == null) {
                     res = FeaturesticBoxCore.get().installBundleAsUser(apkFile, USER_ID);
+                    LoaderLog.i("GG", "installBundleAsUser -> " + (res == null ? "null"
+                            : ("success=" + res.success + " pkg=" + res.packageName + " msg=" + res.msg)));
                 }
                 final InstallResult finalRes = res;
                 final String finalLabel = (resolvedLabel != null && !resolvedLabel.isEmpty())
@@ -1810,8 +1825,15 @@ public class MAct extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        LoaderLog.i("MAct", "onPause (leaving foreground)");
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        LoaderLog.i("MAct", "onDestroy");
         if (countdownHandler != null && countdownRunnable != null) {
             countdownHandler.removeCallbacks(countdownRunnable);
         }
@@ -1885,15 +1907,20 @@ public class MAct extends AppCompatActivity {
     }
 
     private void startGameSequence() {
+        LoaderLog.i("GAME", "startGameSequence pkg=" + PKG_BGMI + " needsSync=" + needsVirtualGameSync());
         if (!ensureAllFilesAccess()) {
+            LoaderLog.e("GAME", "all-files access missing, aborting launch");
             progressText.setText("Allow 'All files access' to reuse game OBB/data");
             return;
         }
         if (needsVirtualGameSync()) {
+            LoaderLog.i("GAME", "cloning game into sandbox...");
             progressText.setText("Cloning & Optimizing Game Engine...");
             progressBar.setIndeterminate(true);
             new Thread(() -> {
                 InstallResult result = FeaturesticBoxCore.get().installPackageAsUser(PKG_BGMI, USER_ID);
+                LoaderLog.i("GAME", "sandbox install result=" + (result == null ? "null"
+                        : ("success=" + result.success + " pkg=" + result.packageName + " msg=" + result.msg)));
                 runOnUiThread(() -> {
                     progressBar.setIndeterminate(false);
                     if (result != null && result.success) {
@@ -1920,6 +1947,47 @@ public class MAct extends AppCompatActivity {
         progressText.setText("Launching Game...");
         progressBar.setIndeterminate(true);
         new Handler(Looper.getMainLooper()).postDelayed(this::launchGame, 350);
+    }
+
+    private void showLogsDialog() {
+        String content = LoaderLog.readTail(150000);
+        if (content.isEmpty()) {
+            content = "(log is empty)";
+        }
+        ScrollView sv = new ScrollView(this);
+        TextView tv = new TextView(this);
+        tv.setText(content);
+        tv.setTextSize(9f);
+        tv.setTypeface(Typeface.MONOSPACE);
+        tv.setTextColor(Color.parseColor("#E5E5EA"));
+        tv.setBackgroundColor(Color.parseColor("#0B0E21"));
+        int p = dpToPx(10);
+        tv.setPadding(p, p, p, p);
+        tv.setTextIsSelectable(true);
+        sv.addView(tv);
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Loader Logs • " + LoaderLog.getDirPath())
+                .setView(sv)
+                .setPositiveButton("Share", (d, w) -> shareLogs())
+                .setNeutralButton("Logcat", (d, w) -> {
+                    LoaderLog.captureLogcat();
+                    showToast("Capturing logcat...");
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    private void shareLogs() {
+        try {
+            String text = LoaderLog.readTail(250000);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("text/plain");
+            share.putExtra(Intent.EXTRA_SUBJECT, "Featurestic Loader Logs");
+            share.putExtra(Intent.EXTRA_TEXT, text);
+            startActivity(Intent.createChooser(share, "Share Loader Logs"));
+        } catch (Throwable t) {
+            showToast("Share failed: " + t.getMessage());
+        }
     }
 
     private void showToast(String message) {
@@ -2034,7 +2102,9 @@ public class MAct extends AppCompatActivity {
 
     private void launchGame() {
         try {
+            LoaderLog.i("GAME", "launchGame pkg=" + PKG_BGMI + " userId=" + USER_ID);
             if (!ischicken() || !verifyAuthenticatedSessionAndPanelGate() || !isExpiryDateValid()) {
+                LoaderLog.e("GAME", "launch aborted: security/auth gate failed");
                 showToast("Security error: Unauthorized session or login bypass detected!");
                 startActivity(new Intent(this, LogAct.class));
                 finish();
@@ -2047,6 +2117,7 @@ public class MAct extends AppCompatActivity {
             }
             String label = getGameLabelForPkg(PKG_BGMI);
             boolean ok = FeaturesticBoxCore.get().launchApk(PKG_BGMI, USER_ID);
+            LoaderLog.i("GAME", "launchApk(" + PKG_BGMI + ") ok=" + ok);
             if (ok) {
                 showToast("Launching " + label + "...");
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -2068,6 +2139,7 @@ public class MAct extends AppCompatActivity {
                 }).start();
             }
         } catch (Exception e) {
+            LoaderLog.e("GAME", "launchGame exception", e);
             if (progressBar != null) progressBar.setIndeterminate(false);
             showToast("Launch failed: " + e.getMessage());
         }
@@ -2470,6 +2542,7 @@ public class MAct extends AppCompatActivity {
 
     private void launchCompanionAppCleanly(final String pkg) {
         if (pkg == null || pkg.isEmpty()) return;
+        LoaderLog.i("GG", "launchCompanionAppCleanly pkg=" + pkg);
         try {
             FboxCompat.notifyCompanionPackageInstalled(pkg);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
@@ -2483,13 +2556,17 @@ public class MAct extends AppCompatActivity {
             new Thread(() -> {
                 try {
                     Intent launchIntent = FeaturesticBoxCore.getBPackageManager().getLaunchIntentForPackage(pkg, USER_ID);
+                    LoaderLog.i("GG", "launch intent=" + (launchIntent == null ? "null" : launchIntent.getComponent()));
                     if (launchIntent != null) {
                         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         FeaturesticBoxCore.getBActivityManager().startActivity(launchIntent, USER_ID);
+                        LoaderLog.i("GG", "startActivity issued for " + pkg);
                     } else {
-                        FeaturesticBoxCore.get().launchApk(pkg, USER_ID);
+                        boolean ok = FeaturesticBoxCore.get().launchApk(pkg, USER_ID);
+                        LoaderLog.i("GG", "launchApk fallback ok=" + ok);
                     }
                 } catch (Throwable e) {
+                    LoaderLog.e("GG", "companion launch failed", e);
                     runOnUiThread(() -> showToast("Failed to launch " + pkg + ": " + e.getMessage()));
                 }
             }, "fbox-clean-gg-launch").start();
